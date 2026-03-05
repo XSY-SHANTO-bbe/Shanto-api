@@ -5,6 +5,7 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors());
+app.use(express.json());
 
 // --- MongoDB Connection (Password encoded correctly) ---
 const mongoURI = "mongodb+srv://botmakenew_db_usershanto:shantobot123%40@cluster0.wr9ezl2.mongodb.net/shantoDB?retryWrites=true&w=majority&appName=Cluster0";
