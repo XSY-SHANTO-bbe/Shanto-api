@@ -1,22 +1,21 @@
 const express = require('express');
 const axios = require('axios');
 const mongoose = require('mongoose');
+const cors = require('cors');
 const app = express();
 
-// --- MongoDB Connection (Password bosano hoyeche) ---
-const mongoURI = "mongodb+srv://botmakenew_db_usershanto:shantobot123@@cluster0.wr9ezl2.mongodb.net/?appName=Cluster0";
+app.use(cors());
+
+// --- MongoDB Connection (Password encoded correctly) ---
+const mongoURI = "mongodb+srv://botmakenew_db_usershanto:shantobot123%40@cluster0.wr9ezl2.mongodb.net/shantoDB?retryWrites=true&w=majority&appName=Cluster0";
 
 mongoose.connect(mongoURI)
-    .then(() => console.log("Database Connected Successfully! SHANTO API is ready."))
-    .catch(err => console.log("Database Connection Error: ", err));
+    .then(() => console.log("Database Connected! Dashboard is Live."))
+    .catch(err => console.log("DB Connection Error: ", err));
 
-// Schema creation
-const Brain = mongoose.model('Brain', new mongoose.Schema({
-    ask: String,
-    ans: String
-}));
+const Brain = mongoose.model('Brain', new mongoose.Schema({ ask: String, ans: String }));
 
-// --- Dashboard HTML Style (Video-r moto shob animation shoho) ---
+// --- Your Premium Dashboard HTML Style ---
 const dashboardHTML = `
 <!DOCTYPE html>
 <html lang="en">
@@ -82,7 +81,7 @@ const dashboardHTML = `
             <h1 class="text-5xl md:text-6xl font-black mb-4 uppercase italic">
                 <span class="text-white">SHANTO</span> <span class="text-sky-400">APIs</span>
             </h1>
-            <p class="text-gray-500 text-sm">Welcome to Professional AI Dashboard</p>
+            <p class="text-gray-500 text-sm italic font-bold">Welcome to Professional AI Dashboard</p>
         </div>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
@@ -94,15 +93,19 @@ const dashboardHTML = `
             <div class="p-6 flex justify-between items-center cursor-pointer" onclick="toggleCategory('ai-box')">
                 <div class="flex items-center gap-5">
                     <div class="w-12 h-12 bg-sky-500/10 rounded-xl flex items-center justify-center text-sky-400 text-xl"><i class="fas fa-robot"></i></div>
-                    <h4 class="font-bold text-lg">AI Commands</h4>
+                    <h4 class="font-bold text-lg">AI & Teach Commands</h4>
                 </div>
                 <i class="fas fa-chevron-down text-gray-600 transition-transform duration-300" id="icon-ai-box"></i>
             </div>
             <div id="ai-box" class="api-content">
                 <div class="p-5 space-y-3">
                     <div class="flex justify-between items-center bg-black/30 p-4 rounded-xl border border-white/5">
-                        <div><p class="text-sm font-bold">Baby AI (Chat & Teach)</p><p class="text-[10px] text-sky-400 italic">Endpoint: /baby</p></div>
+                        <div><p class="text-sm font-bold">Baby AI (Response)</p><p class="text-[10px] text-sky-400 italic">Endpoint: /baby?text=hi</p></div>
                         <a href="/baby?text=hi" target="_blank" class="bg-sky-500 text-black text-[10px] font-black px-4 py-2 rounded-lg uppercase">GET</a>
+                    </div>
+                    <div class="flex justify-between items-center bg-black/30 p-4 rounded-xl border border-white/5">
+                        <div><p class="text-sm font-bold">Teach API (Save Data)</p><p class="text-[10px] text-sky-400 italic">Endpoint: /teach?ask=hi&ans=hello</p></div>
+                        <a href="/teach?ask=hi&ans=hello" target="_blank" class="bg-sky-500 text-black text-[10px] font-black px-4 py-2 rounded-lg uppercase">GET</a>
                     </div>
                 </div>
             </div>
@@ -135,30 +138,26 @@ const dashboardHTML = `
 
 app.get('/', (req, res) => res.send(dashboardHTML));
 
-// --- API ROUTES ---
-
-// Teach API Route
+// --- API Implementation ---
 app.get('/teach', async (req, res) => {
     const { ask, ans } = req.query;
-    if (!ask || !ans) return res.json({ error: "Janu, ques ar ans duto-i lagbe!" });
+    if (!ask || !ans) return res.json({ error: "Provide both ask and ans!" });
     try {
         await Brain.findOneAndUpdate({ ask: ask.toLowerCase() }, { ans }, { upsert: true });
-        res.json({ msg: `Done! Ami shikhlam: ${ask} - ${ans}`, success: true });
-    } catch (e) { res.json({ error: "Database error!" }); }
+        res.json({ msg: "Success! Shanto, data saved to MongoDB.", success: true });
+    } catch (e) { res.status(500).json({ error: "DB Teach Error" }); }
 });
 
-// Baby AI Route (Database + Online)
 app.get('/baby', async (req, res) => {
     const text = (req.query.text || "").toLowerCase();
-    if (!text) return res.json({ error: "Text pathau!" });
-
+    if (!text) return res.json({ error: "Provide text query!" });
     try {
         const data = await Brain.findOne({ ask: text });
         if (data) return res.json({ reply: data.ans, author: "Shanto" });
 
         const response = await axios.get(`https://api.simsimi.vn/v1/simtalk?text=${encodeURIComponent(text)}&lc=bn`);
         res.json({ reply: response.data.message, author: "Shanto" });
-    } catch (e) { res.json({ reply: "Ami eita jani na, shikhaye dau!", author: "Shanto" }); }
+    } catch (e) { res.json({ reply: "Ami eta jani na, shikhaye dao!", author: "Shanto" }); }
 });
 
 module.exports = app;
