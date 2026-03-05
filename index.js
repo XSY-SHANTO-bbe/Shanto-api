@@ -1,3 +1,4 @@
+app.get('/favicon.ico', (req, res) => res.status(204));
 const express = require('express');
 const axios = require('axios');
 const mongoose = require('mongoose');
