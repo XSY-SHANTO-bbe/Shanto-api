@@ -1,133 +1,106 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const path = require("path");
+const express = require('express');
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const cors = require('cors');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ১. ডাটাবেজ কানেকশন
-const mongoURI = "mongodb+srv://botmakenew_db_usershanto:shantobot123%40@cluster0.wr9ezl2.mongodb.net/shantoDB?retryWrites=true&w=majority";
+// তোমার MongoDB কানেকশন স্ট্রিং
+const uri = "mongodb+srv://Shantobaby:Shanto123@cluster0.jnmpzmf.mongodb.net/?appName=Cluster0";
 
-mongoose.connect(mongoURI)
-  .then(() => console.log("✅ Database Connected"))
-  .catch((err) => console.log("❌ DB Error: " + err));
-
-// ২. ডাটাবেজ মডেল
-const ShantoModel = mongoose.model("ShantoData", new mongoose.Schema({
-  ask: String,
-  ans: String
-}));
-
-// ৩. ড্যাশবোর্ড ভিউ (HTML সরাসরি ইনডেক্স ফাইলে)
-app.get("/", (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>SHANTO APIS Dashboard</title>
-        <style>
-            body { background-color: #0a0f1d; color: white; font-family: 'Arial', sans-serif; text-align: center; margin: 0; padding: 20px; }
-            .container { max-width: 500px; margin: auto; padding-top: 50px; }
-            h1 { font-size: 40px; font-style: italic; }
-            h1 span { color: #5bc0de; }
-            .status-box { display: flex; justify-content: space-around; margin-top: 30px; }
-            .card { background: #161c2d; padding: 20px; border-radius: 15px; width: 40%; border: 1px solid #242b3d; }
-            .card h3 { font-size: 14px; color: #8892b0; margin-bottom: 5px; }
-            .card p { font-size: 20px; font-weight: bold; color: #2ecc71; margin: 0; }
-            .card .author { color: #5bc0de; }
-            .command-section { background: #161c2d; margin-top: 30px; padding: 20px; border-radius: 15px; text-align: left; border: 1px solid #242b3d; }
-            .command-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #242b3d; padding-bottom: 10px; }
-            .command-item:last-child { border: none; }
-            .info h4 { margin: 0; font-size: 16px; }
-            .info p { font-size: 12px; color: #5bc0de; font-style: italic; margin-top: 3px; }
-            .btn { background: #5bc0de; color: #0a0f1d; padding: 5px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 12px; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>SHANTO <span>APIS</span></h1>
-            <p style="color: #8892b0;">Welcome to Professional AI Dashboard</p>
-
-            <div class="status-box">
-                <div class="card">
-                    <h3>Status</h3>
-                    <p>LIVE</p>
-                </div>
-                <div class="card">
-                    <h3>Author</h3>
-                    <p class="author">SHANTO</p>
-                </div>
-            </div>
-
-            <div class="command-section">
-                <h3 style="display: flex; align-items: center;"><span style="margin-right: 10px;">🤖</span> AI & Teach Commands</h3>
-                
-                <div class="command-item">
-                    <div class="info">
-                        <h4>Baby AI (Response)</h4>
-                        <p>Endpoint: /baby?text=hi</p>
-                    </div>
-                    <a href="/baby?text=hi" class="btn">GET</a>
-                </div>
-
-                <div class="command-item">
-                    <div class="info">
-                        <h4>Teach API (Save Data)</h4>
-                        <p>Endpoint: /teach?ask=hi&ans=hello</p>
-                    </div>
-                    <a href="/teach?ask=hi&ans=hello" class="btn">GET</a>
-                </div>
-            </div>
-        </div>
-    </body>
-    </html>
-  `);
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
 });
 
-// ৪. এপিআই রাউটগুলো (আগের মতোই থাকবে যেন কাজ না থামে)
-app.get("/baby", async (req, res) => {
-  const text = req.query.text ? req.query.text.toLowerCase() : "";
-  const findData = await ShantoModel.findOne({ ask: text });
-  if (findData) res.json({ reply: findData.ans });
-  else res.json({ reply: "আমি এটা জানি না জানু!" });
+async function run() {
+  try {
+    await client.connect();
+    console.log("MongoDB Connected Successfully!");
+  } finally {
+    // প্রয়োজন ছাড়া কানেকশন ক্লোজ করবেন না
+  }
+}
+run().catch(console.dir);
+
+// Baby API Endpoint
+app.get('/api/baby', (req, res) => {
+  res.json({
+    status: "Active",
+    message: "Shanto Baby API is running",
+    owner: "Shanto",
+    files_count: 5 // তোমার ফাইলের সংখ্যা এখানে লিখতে পারো
+  });
 });
 
-app.get("/teach", async (req, res) => {
-  const { ask, ans } = req.query;
-  if (!ask || !ans) return res.json({ error: "Missing data!" });
-  await ShantoModel.findOneAndUpdate({ ask: ask.toLowerCase() }, { ans: ans }, { upsert: true });
-  res.json({ msg: "✅ Success!", ask, ans });
+// ড্যাশবোর্ড সার্ভ করা
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 module.exports = app;
-const Jimp = require('jimp');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shanto Baby Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .loader-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a; display: flex; justify-content: center;
+            align-items: center; z-index: 9999; transition: opacity 1s ease;
+        }
+        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-20px); } 100% { transform: translateY(0px); } }
+        .profile-img { animation: float 4s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white font-sans">
 
-// ইমেজ এডিট রাউট
-app.get('/imgedit', async (req, res) => {
-    try {
-        const { text, imgurl } = req.query;
-        if (!text || !imgurl) return res.json({ error: "টেক্সট এবং ছবির লিঙ্ক (imgurl) দাও জানু!" });
+    <div id="loader" class="loader-wrapper">
+        <div class="text-3xl font-bold animate-pulse text-blue-400">Loading Shanto's World...</div>
+    </div>
 
-        // ১. ছবি লোড করা
-        const image = await Jimp.read(imgurl);
-        
-        // ২. ফন্ট লোড করা (সাদা ফন্ট)
-        const font = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+    <div class="min-h-screen flex flex-col items-center justify-center p-6">
+        <div class="glass p-8 rounded-3xl border border-white/20 shadow-2xl max-w-md w-full text-center">
+            <img src="https://via.placeholder.com/150" alt="Profile" class="profile-img w-32 h-32 rounded-full mx-auto border-4 border-blue-500 shadow-lg mb-4">
+            
+            <h1 class="text-3xl font-bold mb-2">Shanto Baby</h1>
+            <p class="text-blue-300 mb-6">Full Stack Developer & API Master</p>
 
-        // ৩. ছবির ওপর টেক্সট লেখা (মাঝখানে)
-        image.print(font, 50, 50, text);
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-white/5 p-4 rounded-xl">
+                    <span class="block text-2xl font-bold">12</span>
+                    <span class="text-xs uppercase text-gray-400">Total Files</span>
+                </div>
+                <div class="bg-white/5 p-4 rounded-xl">
+                    <span class="block text-2xl font-bold text-green-400">Online</span>
+                    <span class="text-xs uppercase text-gray-400">Database</span>
+                </div>
+            </div>
 
-        // ৪. এডিট করা ছবি পাঠানো
-        const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
-        res.set("Content-Type", Jimp.MIME_PNG);
-        res.send(buffer);
+            <button onclick="alert('API Connection Active!')" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-semibold transition">
+                Check API Status
+            </button>
+        </div>
+    </div>
 
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: "ছবি এডিট করতে সমস্যা হয়েছে!" });
-    }
-});
+    <script>
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').remove(), 1000);
+            }, 2000);
+        };
+    </script>
+</body>
+</html>
