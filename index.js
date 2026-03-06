@@ -7,7 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 // ১. মঙ্গোডিবি কানেকশন (তোমার পাসওয়ার্ড সহ)
-const uri = "mongodb+srv://Shantobaby:Shanto123@cluster0.jnmpzmf.mongodb.net/?appName=Cluster0";
+const uri = "mongodb+srv://Shantobaby:Shantobot@cluster0.jnmpzmf.mongodb.net/?appName=Cluster0";
 const client = new MongoClient(uri, {
   serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true }
 });
@@ -72,7 +72,7 @@ app.get('/', (req, res) => {
             <div class="glass max-w-md w-full rounded-[2.5rem] p-10 text-center shadow-2xl">
                 
                 <div class="relative inline-block mb-6">
-                    <img src="https://i.ibb.co/LzY7sY0/profile.jpg" class="profile-img w-32 h-32 rounded-full object-cover shadow-[0_0_30px_rgba(59,130,246,0.4)]">
+                    <img src="Https://i.ibb.co/kgJnsgFJ/saimx69x-a106d0.jpg" class="profile-img w-32 h-32 rounded-full object-cover shadow-[0_0_30px_rgba(59,130,246,0.4)]">
                 </div>
 
                 <h1 class="text-3xl font-black text-white tracking-tight">SHANTO BABY</h1>
