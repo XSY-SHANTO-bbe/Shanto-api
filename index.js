@@ -104,3 +104,30 @@ app.get("/teach", async (req, res) => {
 });
 
 module.exports = app;
+const Jimp = require('jimp');
+
+// ইমেজ এডিট রাউট
+app.get('/imgedit', async (req, res) => {
+    try {
+        const { text, imgurl } = req.query;
+        if (!text || !imgurl) return res.json({ error: "টেক্সট এবং ছবির লিঙ্ক (imgurl) দাও জানু!" });
+
+        // ১. ছবি লোড করা
+        const image = await Jimp.read(imgurl);
+        
+        // ২. ফন্ট লোড করা (সাদা ফন্ট)
+        const font = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+
+        // ৩. ছবির ওপর টেক্সট লেখা (মাঝখানে)
+        image.print(font, 50, 50, text);
+
+        // ৪. এডিট করা ছবি পাঠানো
+        const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
+        res.set("Content-Type", Jimp.MIME_PNG);
+        res.send(buffer);
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "ছবি এডিট করতে সমস্যা হয়েছে!" });
+    }
+});
