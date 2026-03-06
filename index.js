@@ -1,86 +1,106 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const path = require("path");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ১. ডাটাবেজ কানেকশন (পাসওয়ার্ড এনকোডেড %40 সহ)
+// ১. ডাটাবেজ কানেকশন
 const mongoURI = "mongodb+srv://botmakenew_db_usershanto:shantobot123%40@cluster0.wr9ezl2.mongodb.net/shantoDB?retryWrites=true&w=majority";
 
-mongoose.connect(mongoURI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log("✅ MongoDB Connected Successfully!"))
-.catch(err => console.error("❌ MongoDB Connection Error:", err));
+mongoose.connect(mongoURI)
+  .then(() => console.log("✅ Database Connected"))
+  .catch((err) => console.log("❌ DB Error: " + err));
 
-// ২. ডাটাবেজ মডেল (Schema)
-const ShantoBrain = mongoose.model('ShantoBrain', new mongoose.Schema({
-    ask: { type: String, required: true, unique: true },
-    ans: { type: String, required: true }
+// ২. ডাটাবেজ মডেল
+const ShantoModel = mongoose.model("ShantoData", new mongoose.Schema({
+  ask: String,
+  ans: String
 }));
 
-// ৩. হোম রাউট (সার্ভার চেক করার জন্য)
-app.get('/', (req, res) => {
-    res.send("<h1>SHANTO API IS LIVE & READY!</h1>");
+// ৩. ড্যাশবোর্ড ভিউ (HTML সরাসরি ইনডেক্স ফাইলে)
+app.get("/", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SHANTO APIS Dashboard</title>
+        <style>
+            body { background-color: #0a0f1d; color: white; font-family: 'Arial', sans-serif; text-align: center; margin: 0; padding: 20px; }
+            .container { max-width: 500px; margin: auto; padding-top: 50px; }
+            h1 { font-size: 40px; font-style: italic; }
+            h1 span { color: #5bc0de; }
+            .status-box { display: flex; justify-content: space-around; margin-top: 30px; }
+            .card { background: #161c2d; padding: 20px; border-radius: 15px; width: 40%; border: 1px solid #242b3d; }
+            .card h3 { font-size: 14px; color: #8892b0; margin-bottom: 5px; }
+            .card p { font-size: 20px; font-weight: bold; color: #2ecc71; margin: 0; }
+            .card .author { color: #5bc0de; }
+            .command-section { background: #161c2d; margin-top: 30px; padding: 20px; border-radius: 15px; text-align: left; border: 1px solid #242b3d; }
+            .command-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #242b3d; padding-bottom: 10px; }
+            .command-item:last-child { border: none; }
+            .info h4 { margin: 0; font-size: 16px; }
+            .info p { font-size: 12px; color: #5bc0de; font-style: italic; margin-top: 3px; }
+            .btn { background: #5bc0de; color: #0a0f1d; padding: 5px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 12px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>SHANTO <span>APIS</span></h1>
+            <p style="color: #8892b0;">Welcome to Professional AI Dashboard</p>
+
+            <div class="status-box">
+                <div class="card">
+                    <h3>Status</h3>
+                    <p>LIVE</p>
+                </div>
+                <div class="card">
+                    <h3>Author</h3>
+                    <p class="author">SHANTO</p>
+                </div>
+            </div>
+
+            <div class="command-section">
+                <h3 style="display: flex; align-items: center;"><span style="margin-right: 10px;">🤖</span> AI & Teach Commands</h3>
+                
+                <div class="command-item">
+                    <div class="info">
+                        <h4>Baby AI (Response)</h4>
+                        <p>Endpoint: /baby?text=hi</p>
+                    </div>
+                    <a href="/baby?text=hi" class="btn">GET</a>
+                </div>
+
+                <div class="command-item">
+                    <div class="info">
+                        <h4>Teach API (Save Data)</h4>
+                        <p>Endpoint: /teach?ask=hi&ans=hello</p>
+                    </div>
+                    <a href="/teach?ask=hi&ans=hello" class="btn">GET</a>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+  `);
 });
 
-// ৪. BABY CHAT ROUTE (উত্তর পাওয়ার জন্য)
-app.get('/baby', async (req, res) => {
-    try {
-        const text = req.query.text ? req.query.text.toLowerCase().trim() : "";
-        if (!text) return res.status(400).json({ error: "Text is required!" });
-
-        const data = await ShantoBrain.findOne({ ask: text });
-        if (data) {
-            res.json({ reply: data.ans });
-        } else {
-            res.json({ reply: "আমি এটা জানি না জানু! আমাকে শিখিয়ে দাও।" });
-        }
-    } catch (error) {
-        res.status(500).json({ error: "Internal server error!" });
-    }
+// ৪. এপিআই রাউটগুলো (আগের মতোই থাকবে যেন কাজ না থামে)
+app.get("/baby", async (req, res) => {
+  const text = req.query.text ? req.query.text.toLowerCase() : "";
+  const findData = await ShantoModel.findOne({ ask: text });
+  if (findData) res.json({ reply: findData.ans });
+  else res.json({ reply: "আমি এটা জানি না জানু!" });
 });
 
-// ৫. TEACH ROUTE (নতুন কিছু শিখানোর জন্য)
-app.get('/teach', async (req, res) => {
-    try {
-        const { ask, ans } = req.query;
-        if (!ask || !ans) return res.status(400).json({ error: "Provide both ask and ans!" });
-
-        await ShantoBrain.findOneAndUpdate(
-            { ask: ask.toLowerCase().trim() },
-            { ans: ans.trim() },
-            { upsert: true, new: true }
-        );
-        res.json({ msg: "Success! I learned this.", ask: ask, ans: ans });
-    } catch (error) {
-        res.status(500).json({ error: "Database error during teaching!" });
-    }
-});
-
-// ৬. EDIT ROUTE (আগের উত্তর পরিবর্তন করার জন্য)
-app.get('/edit', async (req, res) => {
-    try {
-        const { ask, newAns } = req.query;
-        if (!ask || !newAns) return res.status(400).json({ error: "Provide ask and newAns!" });
-
-        const updatedData = await ShantoBrain.findOneAndUpdate(
-            { ask: ask.toLowerCase().trim() },
-            { ans: newAns.trim() },
-            { new: true }
-        );
-
-        if (updatedData) {
-            res.json({ msg: "✅ Updated successfully!", ask: ask, newAns: newAns });
-        } else {
-            res.status(404).json({ error: "❌ This question does not exist!" });
-        }
-    } catch (error) {
-        res.status(500).json({ error: "Server error during update!" });
-    }
+app.get("/teach", async (req, res) => {
+  const { ask, ans } = req.query;
+  if (!ask || !ans) return res.json({ error: "Missing data!" });
+  await ShantoModel.findOneAndUpdate({ ask: ask.toLowerCase() }, { ans: ans }, { upsert: true });
+  res.json({ msg: "✅ Success!", ask, ans });
 });
 
 module.exports = app;
